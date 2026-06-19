@@ -23,8 +23,9 @@ clicks_part AS
     SELECT
         toString(%[1]s) as gr_key,
         count(*) AS clicks,
-        sumIf(win_dsp_price, format = 'POP') / 1000
-            + sumIf(win_dsp_price, format = 'IPP') AS cost
+        countIf(format = 'POP') AS pop_impressions,
+        sumIf(win_final_price, format = 'POP') / 1000
+            + sumIf(win_final_price, format = 'IPP') AS cost
     FROM fact_clicks
     WHERE spp_domain = ?
       AND event_date >= ?
@@ -42,12 +43,13 @@ impressions_part AS
     WHERE spp_domain = ?
       AND event_date >= ?
       AND event_date <= ?
+      AND format NOT IN ('POP')
     GROUP BY gr_key
 )
 
 SELECT
     coalesce(c.gr_key, i.gr_key) AS group_key,
-    ifNull(i.impressions, 0) AS impressions,
+    ifNull(i.impressions, 0) + ifNull(c.pop_impressions, 0) AS impressions,
     ifNull(c.clicks, 0) AS clicks,
     ifNull(c.cost, 0) + ifNull(i.cost, 0) AS cost
 FROM clicks_part AS c
