@@ -53,6 +53,7 @@ SELECT
 FROM clicks_part AS c
 FULL OUTER JOIN impressions_part AS i
     ON c.gr_key = i.gr_key
+WHERE group_key is not NULL
 ORDER BY group_key
 `, groupByExpr)
 
